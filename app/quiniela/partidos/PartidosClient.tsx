@@ -2,6 +2,54 @@
 import { useState, useRef } from 'react'
 import { guardarPronostico } from '../actions'
 
+function VoucherButton({ pronosticoMap, partidos }: {
+  pronosticoMap: Record<number, { goles_local: number; goles_visitante: number; puntos: number | null }>;
+  partidos: { id: number; fase: string | null; grupo: string | null }[]
+}) {
+  const [gen, setGen] = useState(false)
+
+  const conProno = partidos.filter(p => pronosticoMap[p.id] !== undefined).length
+  if (conProno === 0) return null
+
+  const handleClick = () => {
+    setGen(true)
+    window.open('/api/voucher', '_blank')
+    setTimeout(() => setGen(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={gen}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7,
+        padding: '8px 16px',
+        borderRadius: 8,
+        border: '1px solid rgba(255,214,10,0.35)',
+        background: gen ? 'rgba(255,214,10,0.12)' : 'rgba(255,214,10,0.08)',
+        color: 'var(--gold)',
+        fontFamily: 'var(--font-display)',
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+        cursor: gen ? 'wait' : 'pointer',
+        transition: 'all 0.15s',
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {gen ? (
+        <>
+          <span style={{ width: 11, height: 11, border: '2px solid rgba(255,214,10,0.2)', borderTopColor: 'var(--gold)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+          GENERANDO...
+        </>
+      ) : (
+        <>🎟 VER VOUCHER</>
+      )}
+    </button>
+  )
+}
+
 const flag = (c: string, s = '32x24') => `https://flagcdn.com/${s}/${c.toLowerCase()}.png`
 const fmtF = (f: string) => new Date(f+'T00:00:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})
 const fmtH = (h: string) => h.slice(0,5)+' CST'
@@ -203,36 +251,39 @@ export default function PartidosClient({ partidos, pronosticoMap, banderasPorGru
   return (
     <div className="wrap" style={{ paddingTop:28, paddingBottom:64 }}>
 
-      {/* ── TABS DE FASE ── */}
-      <div style={{ display:'flex', gap:6, marginBottom:16, overflowX:'auto', paddingBottom:4 }}>
-        {fasesOrdenadas.map(fase => {
-          const ps = partidos.filter(p=>(p.fase??'Otros')===fase)
-          const pron = ps.filter(p=>pronosticoMap[p.id]!==undefined).length
-          const done = pron===ps.length && ps.length>0
-          const isAct = faseActiva===fase
-          return (
-            <button key={fase} onClick={()=>{ setFaseActiva(fase); setGrupoActivo(null) }}
-              style={{
-                flexShrink:0,
-                display:'flex', alignItems:'center', gap:6,
-                padding:'10px 16px',
-                borderRadius:8,
-                border: isAct ? '1px solid var(--fire)' : '1px solid var(--stroke)',
-                background: isAct ? 'var(--fire)' : done ? 'rgba(0,212,106,0.06)' : 'var(--ink-2)',
-                color: isAct ? '#fff' : done ? 'var(--turf)' : 'var(--text-2)',
-                fontFamily:'var(--font-display)',
-                fontSize:12,
-                fontWeight:800,
-                letterSpacing:'0.06em',
-                cursor:'pointer',
-                transition:'all 0.15s',
-              }}>
-              <span>{FASE_ICON[fase]??'⚽'}</span>
-              <span>{FASE_LABEL[fase]??fase.toUpperCase()}</span>
-              {done && <span style={{ fontSize:9, opacity:0.8 }}>✓</span>}
-            </button>
-          )
-        })}
+      {/* ── TABS DE FASE + VOUCHER ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+        <div style={{ display:'flex', gap:6, overflowX:'auto', paddingBottom:4, flex:1 }}>
+          {fasesOrdenadas.map(fase => {
+            const ps = partidos.filter(p=>(p.fase??'Otros')===fase)
+            const pron = ps.filter(p=>pronosticoMap[p.id]!==undefined).length
+            const done = pron===ps.length && ps.length>0
+            const isAct = faseActiva===fase
+            return (
+              <button key={fase} onClick={()=>{ setFaseActiva(fase); setGrupoActivo(null) }}
+                style={{
+                  flexShrink:0,
+                  display:'flex', alignItems:'center', gap:6,
+                  padding:'10px 16px',
+                  borderRadius:8,
+                  border: isAct ? '1px solid var(--fire)' : '1px solid var(--stroke)',
+                  background: isAct ? 'var(--fire)' : done ? 'rgba(0,212,106,0.06)' : 'var(--ink-2)',
+                  color: isAct ? '#fff' : done ? 'var(--turf)' : 'var(--text-2)',
+                  fontFamily:'var(--font-display)',
+                  fontSize:12,
+                  fontWeight:800,
+                  letterSpacing:'0.06em',
+                  cursor:'pointer',
+                  transition:'all 0.15s',
+                }}>
+                <span>{FASE_ICON[fase]??'⚽'}</span>
+                <span>{FASE_LABEL[fase]??fase.toUpperCase()}</span>
+                {done && <span style={{ fontSize:9, opacity:0.8 }}>✓</span>}
+              </button>
+            )
+          })}
+        </div>
+        <VoucherButton pronosticoMap={pronosticoMap} partidos={partidos} />
       </div>
 
       {/* ── SUB-TABS DE GRUPO (solo en Fase de Grupos) ── */}
@@ -343,7 +394,7 @@ export default function PartidosClient({ partidos, pronosticoMap, banderasPorGru
         )}
       </div>
 
-      <p style={{ textAlign:'center', fontSize:11, color:'var(--text-3)', marginTop:36, fontFamily:'var(--font-display)', letterSpacing:'0.1em', textTransform:'uppercase' }}>
+      <p style={{ textAlign:'center', fontSize:11, color:'var(--text-3)', marginTop:32, fontFamily:'var(--font-display)', letterSpacing:'0.1em', textTransform:'uppercase' }}>
         Quiniela MX 2026 · Hecho con ⚽ en México
       </p>
 
@@ -352,6 +403,7 @@ export default function PartidosClient({ partidos, pronosticoMap, banderasPorGru
           .row-date, .row-status, .col-headers { display: flex !important; }
         }
         .pill-turf { background: var(--turf-dim); color: var(--turf); border-color: rgba(0,212,106,0.25); font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   )

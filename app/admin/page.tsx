@@ -67,6 +67,7 @@ export default async function AdminPage() {
             <span className="f-display" style={{ fontSize: 18, color: 'var(--gold)', letterSpacing: '0.06em' }}>PANEL ADMIN</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <a href="/admin/pronosticos" className="btn btn-outline" style={{ fontSize: 12, padding: '7px 14px', borderColor: 'rgba(0,212,106,0.25)', color: 'var(--turf)' }}>📋 Pronósticos</a>
             <a href="/admin/usuarios" className="btn btn-outline" style={{ fontSize: 12, padding: '7px 14px', borderColor: 'rgba(255,214,10,0.25)', color: 'var(--gold)' }}>Usuarios</a>
             <LogoutButton />
           </div>
