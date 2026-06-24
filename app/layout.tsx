@@ -18,8 +18,11 @@ const barlow = Barlow({
 })
 
 export const metadata: Metadata = {
-  title: "Quiniela MX — Mundial 2026",
+  title: "Picks MX — Mundial 2026",
   description: "Pronostica los partidos del Mundial 2026 y compite con tus amigos",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
