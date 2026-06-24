@@ -18,15 +18,30 @@ export default async function DashboardPage() {
 
   const service = createServiceClient()
 
+  const fetchAllPronos = async () => {
+    const pageSize = 1000
+    let all: { usuario_id: string; puntos: number | null }[] = []
+    let from = 0
+    while (true) {
+      const { data, error } = await service
+        .from('pronosticos').select('usuario_id,puntos').range(from, from + pageSize - 1)
+      if (error || !data || data.length === 0) break
+      all = all.concat(data)
+      if (data.length < pageSize) break
+      from += pageSize
+    }
+    return all
+  }
+
   const [
     {data:partidos},{data:pronos},{data:perfil},
-    {data:todosP},{data:perfiles},
+    todosP,{data:perfiles},
   ] = await Promise.all([
     supabase.from('partidos').select('*').eq('fase_abierta',true).order('fecha',{ascending:true}).order('hora',{ascending:true}),
     supabase.from('pronosticos').select('*').eq('usuario_id',user.id),
-    supabase.from('perfiles').select('nombre,avatar_url,es_admin').eq('id',user.id).single(), // propio perfil (RLS OK)
-    service.from('pronosticos').select('usuario_id,puntos'),           // todos los pronósticos (service role)
-    service.from('perfiles').select('id,nombre,avatar_url'),           // todos los perfiles (service role)
+    supabase.from('perfiles').select('nombre,avatar_url,es_admin').eq('id',user.id).single(),
+    fetchAllPronos(),
+    service.from('perfiles').select('id,nombre,avatar_url,es_admin'),
   ])
 
   // Solo contar pronósticos de partidos que están ACTUALMENTE abiertos
@@ -43,10 +58,12 @@ export default async function DashboardPage() {
   const pts   = pronos?.reduce((s,p) => s+(p.puntos??0), 0) ?? 0
   const exs   = pronos?.filter(p => p.puntos===3).length ?? 0
 
-  const pMap  = new Map(perfiles?.map(p=>[p.id,{nombre:p.nombre??'Usuario',avatar:p.avatar_url}])??[])
+  const pMap  = new Map(perfiles?.map(p=>[p.id,{nombre:p.nombre??'Usuario',avatar:p.avatar_url,esAdmin:p.es_admin??false}])??[])
   const res: Record<string,{uid:string;nombre:string;avatar:string|null;total:number}> = {}
-  todosP?.forEach(p=>{
-    if(!res[p.usuario_id]) res[p.usuario_id]={uid:p.usuario_id,nombre:pMap.get(p.usuario_id)?.nombre??'Usuario',avatar:pMap.get(p.usuario_id)?.avatar??null,total:0}
+  todosP.forEach(p=>{
+    const pm = pMap.get(p.usuario_id)
+    if(!pm || pm.esAdmin) return
+    if(!res[p.usuario_id]) res[p.usuario_id]={uid:p.usuario_id,nombre:pm.nombre,avatar:pm.avatar,total:0}
     res[p.usuario_id].total+=(p.puntos??0)
   })
   const ranking   = Object.values(res).sort((a,b)=>b.total-a.total)
