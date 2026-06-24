@@ -18,10 +18,20 @@ export default function LoginPage() {
 
   // Si ya hay sesión activa al montar, chequear must_change_password
   useEffect(() => {
+    let isMounted = true
     const supabase = createClient()
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) await checkMustChange(session.user.id)
-    })
+    
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session && isMounted) await checkMustChange(session.user.id)
+      } catch (err) {
+        console.error('Error checking session:', err)
+      }
+    }
+    
+    checkSession()
+    return () => { isMounted = false }
   }, [])
 
   const checkMustChange = async (userId: string) => {
