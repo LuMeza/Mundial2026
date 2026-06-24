@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
 
 export default function LoginBall() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -11,9 +12,7 @@ export default function LoginBall() {
     let animId: number
     let cleanup: (() => void) | undefined
 
-    const init = async () => {
-      const THREE = await import('three')
-
+    const init = () => {
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       renderer.setSize(window.innerWidth, window.innerHeight)
@@ -187,7 +186,7 @@ export default function LoginBall() {
       }
     }
 
-    init().then(fn => { cleanup = fn })
+    cleanup = init()
     return () => { cleanup?.() }
   }, [])
 

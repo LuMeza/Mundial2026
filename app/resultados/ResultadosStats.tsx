@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
 import CountUp from '@/app/components/CountUp'
 
 interface StatItem {
@@ -24,8 +25,7 @@ function Confetti({ count = 80 }: { count?: number }) {
     let animId: number
     let cleanup: (() => void) | undefined
 
-    const init = async () => {
-      const THREE = await import('three')
+    const init = () => {
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false })
       renderer.setPixelRatio(1)
       renderer.setSize(window.innerWidth, window.innerHeight)
@@ -108,7 +108,7 @@ function Confetti({ count = 80 }: { count?: number }) {
       }
     }
 
-    init().then(fn => { cleanup = fn })
+    cleanup = init()
     return () => { cleanup?.() }
   }, [])
 

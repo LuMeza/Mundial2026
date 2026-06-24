@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
 
 export default function RankingBg() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -9,12 +10,8 @@ export default function RankingBg() {
     if (!canvas) return
 
     let animId: number
-    let THREE: any
 
-    const init = async () => {
-      const mod = await import('three')
-      THREE = mod
-
+    const init = () => {
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       renderer.setSize(window.innerWidth, window.innerHeight)
@@ -121,7 +118,7 @@ export default function RankingBg() {
     }
 
     const cleanup = init()
-    return () => { cleanup.then(fn => fn?.()) }
+    return () => { cleanup?.() }
   }, [])
 
   return (
