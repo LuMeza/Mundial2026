@@ -90,7 +90,6 @@ export default function UsuariosClient({ perfiles, currentUserId }: Props) {
         <div>
           <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Gestión de acceso</p>
           <p style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
-            Los usuarios se crean con el script <code style={{ color: 'var(--turf)', background: 'rgba(0,212,106,0.08)', padding: '1px 6px', borderRadius: 4 }}>node scripts/seed-users.js</code>.
             Usa <strong style={{ color: 'var(--fire)' }}>Reset PW</strong> para forzar que un usuario cambie su contraseña al próximo login.
           </p>
         </div>
