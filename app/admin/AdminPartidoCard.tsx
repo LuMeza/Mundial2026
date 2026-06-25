@@ -21,8 +21,8 @@ const esPlaceholder = (nombre: string) =>
   /^[0-9]+[A-Z]{1,2}\//.test(nombre)   // 3A/B/C/D
 
 export default function AdminPartidoCard({ partido }: Props) {
-  const [loc,  setLoc]  = useState<number|''>(partido.goles_local??'')
-  const [vis,  setVis]  = useState<number|''>(partido.goles_visitante??'')
+  const [loc,  setLoc]  = useState<number|''>(partido.goles_local??0)
+  const [vis,  setVis]  = useState<number|''>(partido.goles_visitante??0)
   const [est,  setEst]  = useState<'idle'|'saving'|'ok'|'err'>('idle')
   const t = useRef<ReturnType<typeof setTimeout>|null>(null)
 

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 // ─── Verificar admin ─────────────────────────────────────────────
 async function verificarAdmin() {
@@ -18,10 +19,13 @@ export async function guardarResultado(
   golesLocal: number,
   golesVisitante: number
 ) {
-  const { error, supabase } = await verificarAdmin()
-  if (error || !supabase) return { error }
+  const { error } = await verificarAdmin()
+  if (error) return { error }
 
-  const { error: errUpdate } = await supabase
+  // Usar service client para bypassar RLS (partidos con fase_abierta=false también deben poder actualizarse)
+  const service = createServiceClient()
+
+  const { error: errUpdate } = await service
     .from('partidos')
     .update({ goles_local: golesLocal, goles_visitante: golesVisitante })
     .eq('id', partidoId)
@@ -29,7 +33,7 @@ export async function guardarResultado(
   if (errUpdate) return { error: errUpdate.message }
 
   // Recalcular puntos de todos los pronósticos de este partido
-  const { data: pronosticos } = await supabase
+  const { data: pronosticos } = await service
     .from('pronosticos')
     .select('*')
     .eq('partido_id', partidoId)
@@ -44,7 +48,7 @@ export async function guardarResultado(
 
     const puntos = acertoExacto ? 3 : acertoGanador ? 1 : 0
 
-    await supabase.from('pronosticos').update({ puntos }).eq('id', p.id)
+    await service.from('pronosticos').update({ puntos }).eq('id', p.id)
   }
 
   return { ok: true }
